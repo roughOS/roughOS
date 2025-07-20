@@ -1,0 +1,42 @@
+# WitherOS
+*A small, free and open-source 32-bit operating system for x86.*
+
+## Why should I use WitherOS?
+Let's be honest: you shouldn't.
+
+The OS is at a very early development stage. Using it as your main OS would be a very bad and stupid idea. But you can read the source code, contribute to help its improvement, or even use it as a base for your operating system.
+
+## Features
+- Booting with GRUB2
+- GDT
+- IDT
+- VGA driver
+- PIC driver
+- PS/2 driver
+- Basic keyboard driver
+- Basic ATA/IDE driver
+- Basic kernel libc
+- PMM (Physical Memory Manager)
+- Heap
+
+## Building
+1. Clone the repository
+```bash
+git clone https://github.com/TRWither/witheros
+```
+
+2. Run the build script
+```bash
+cd witheros
+chmod +x build.sh
+./build.sh
+```
+
+A file named `witheros.iso` and another one named `ide_disk.img` should have been created!
+You can now run WitherOS using the following command:
+```bash
+qemu-system-i386 -cdrom witheros.iso -hda ide_disk.img
+```
+
+## Contributing
+Everyone is free to contribute to WitherOS! Read detailed contribution rules [here](CONTRIBUTING.md).
