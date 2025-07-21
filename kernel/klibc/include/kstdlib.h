@@ -21,6 +21,15 @@ void kitoa(int i, char *buffer, int base);
 void *kmalloc(size_t size);
 
 /*
+    Allocate memory on the heap and set to 0
+
+    Params:
+        nmemb - number of elements to allocate
+        size  - size of each element in bytes
+*/
+void *kcalloc(size_t nmemb, size_t size);
+
+/*
     Free allocated memory on the heap
 
     Params:

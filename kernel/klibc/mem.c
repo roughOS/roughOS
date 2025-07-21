@@ -56,6 +56,16 @@ void *kmalloc(size_t size)
     return heap_malloc(size);
 }
 
+void *kcalloc(size_t nmemb, size_t size)
+{
+    size_t total = nmemb * size;
+    void *ptr = kmalloc(total);
+    if (!ptr)
+        return NULL;
+    kmemset(ptr, 0, total);
+    return ptr;
+}
+
 void kfree(void *ptr)
 {
     heap_free(ptr);

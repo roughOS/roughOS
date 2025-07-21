@@ -26,3 +26,5 @@ grub-mkrescue -o "$ISO_NAME" "$ISO_DIR"
 # Create an empty 1MB disk image
 rm -rf $DISK_IMAGE
 dd if=/dev/zero of=$DISK_IMAGE bs=512 count=204800
+printf '\x55\xAA' | dd conv=notrunc bs=1 seek=510 of=mbr.bin
+dd if=mbr.bin of=$DISK_IMAGE bs=512 count=1 conv=notrunc

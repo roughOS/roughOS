@@ -8,11 +8,15 @@
 #include "boot/include/multiboot.h"
 #include "mm/include/pmm.h"
 #include "mm/include/heap.h"
+#include "fs/include/mbr.h"
 #include <stdint.h>
 #include <stddef.h>
 
+void template();
+
 static Frame frames[MAX_FRAMES];
 static uint16_t ide_buffer[256];
+static MBRPartition partitions[MAX_PARTITIONS];
 
 void kmain(void *mb2_addr)
 {
@@ -54,7 +58,15 @@ void kmain(void *mb2_addr)
         kprint_log(LOG_ERR, "No present IDE device");
     }
 
+    int ret = mbr_read_partitions(partitions);
+    if (ret < 0)
+        kprint_log(LOG_ERR, "MBR error code: %d", ret);
+    else
+        kprint_log(LOG_INFO, "MBR primary partitions found");
+
     asm volatile ("sti");
+
+    template();
 
     while (1);
 }

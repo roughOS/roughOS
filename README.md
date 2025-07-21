@@ -38,5 +38,10 @@ You can now run WitherOS using the following command:
 qemu-system-i386 -cdrom witheros.iso -hda ide_disk.img
 ```
 
+## Run a program
+WitherOS doesn't have a filesystem yet, but you can make programs for it without editing the source code.
+
+Open [`template.c`](kernel/template.c). You will see a basic function displaying "Hello world!" using the klibc `kprintf()` function. This function is automatically executed by the kernel when you run the operating system. Just recompile it when you edit the function code.
+
 ## Contributing
 Everyone is free to contribute to WitherOS! Read detailed contribution rules [here](CONTRIBUTING.md).
