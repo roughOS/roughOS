@@ -5,8 +5,8 @@ set -e
 
 # Variables
 ISO_DIR=iso
-ELF_NAME=witheros.elf
-ISO_NAME=witheros.iso
+ELF_NAME=roughos.elf
+ISO_NAME=roughos.iso
 DISK_IMAGE=ide_disk.img
 
 # Build the OS

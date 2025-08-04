@@ -6,7 +6,7 @@
 
 void isr_default()
 {
-    kputs("Default interrupt\n\r");
+    kputs("Unhandled interrupt\n\r");
 }
 
 void isr_clock()

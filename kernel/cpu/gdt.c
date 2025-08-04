@@ -22,9 +22,12 @@ void gdt_init()
     gdtp.base = (uint32_t) &gdt;
 
     gdt_set_entry(0, 0, 0x00000000, 0x00, 0x00);    // null
-    gdt_set_entry(1, 0, 0xfffff, 0x9a, 0xc0);       // 32-bit code
-    gdt_set_entry(2, 0, 0xfffff, 0x92, 0xc0);       // 32-bit data
-    gdt_set_entry(3, 0, 0xfffff, 0x92, 0xcf);       // 32-bit stack
+    gdt_set_entry(1, 0, 0xfffff, 0x9a, 0xc0);       // kernel code
+    gdt_set_entry(2, 0, 0xfffff, 0x92, 0xc0);       // kernel data
+    gdt_set_entry(3, 0, 0xfffff, 0x92, 0xcf);       // kernel stack
+    gdt_set_entry(4, 0, 0xfffff, 0xfa, 0xcf);       // user code
+    gdt_set_entry(5, 0, 0xfffff, 0xf2, 0xcf);       // user data
+    gdt_set_entry(6, 0, 0xfffff, 0xf2, 0xcf);       // user stack
 
     asm volatile (
         "lgdt (%0)\n\t"

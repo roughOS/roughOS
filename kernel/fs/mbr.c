@@ -9,12 +9,16 @@ int mbr_read_partitions(MBRPartition *out_partitions)
         return -1;
 
     uint8_t *mbr = (uint8_t *) sector;
+    if (!mbr) return -3;
+
     if (mbr[510] != 0x55 || mbr[511] != 0xaa)
         return -2;
 
     for (int i = 0; i < MAX_PARTITIONS; i++)
     {
         MBRPartition *entry = (MBRPartition *)(mbr + 446 + i * 16);
+        if (!entry) return -4;
+
         out_partitions[i] = *entry;
     }
 

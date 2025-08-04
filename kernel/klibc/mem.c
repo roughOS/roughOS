@@ -1,11 +1,16 @@
 #include "klibc/include/kstring.h"
 #include "klibc/include/kstdlib.h"
 #include "mm/include/heap.h"
+#include <stddef.h>
 #include <stdint.h>
 
 void *kmemcpy(void *dest, const void *src, size_t n)
 {
+    if (!dest || !src) return NULL;
+
     uint8_t *pdest = (uint8_t *)dest;
+    if (!pdest) return NULL;
+
     const uint8_t *psrc = (const uint8_t *)src;
 
     for (size_t i = 0; i < n; i++)
@@ -16,7 +21,11 @@ void *kmemcpy(void *dest, const void *src, size_t n)
 
 void *kmemmove(void *dest, const void *src, size_t n)
 {
+    if (!dest || !src) return NULL;
+
     uint8_t *pdest = (uint8_t *)dest;
+    if (!pdest) return NULL;
+
     const uint8_t *psrc = (const uint8_t *)src;
 
     if (src > dest)
@@ -31,7 +40,10 @@ void *kmemmove(void *dest, const void *src, size_t n)
 
 void *kmemset(void *s, int c, size_t n)
 {
+    if (!s) return NULL;
+
     uint8_t *p = (uint8_t *)s;
+    if (!p) return NULL;
 
     for (size_t i = 0; i < n; i++)
         p[i] = (uint8_t)c;
@@ -41,8 +53,11 @@ void *kmemset(void *s, int c, size_t n)
 
 int kmemcmp(const void *s1, const void *s2, size_t n)
 {
+    if (!s1 || !s2) return NULL;
+
     const uint8_t *p1 = (const uint8_t *)s1;
     const uint8_t *p2 = (const uint8_t *)s2;
+    if (!p1 || !p2) return NULL;
 
     for (size_t i = 0; i < n; i++)
         if (p1[i] != p2[i])
@@ -68,5 +83,7 @@ void *kcalloc(size_t nmemb, size_t size)
 
 void kfree(void *ptr)
 {
+    if (!ptr) return;
+
     heap_free(ptr);
 }

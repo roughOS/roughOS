@@ -3,4 +3,6 @@
 void template()
 {
     kprintf("Hello world!\n");
+
+    while (1);
 }

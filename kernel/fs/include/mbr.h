@@ -23,15 +23,4 @@ typedef struct
     uint16_t signature;
 } __attribute__ ((packed)) MBR;
 
-/*
-    Read the MBR primary partitions
-
-    Params:
-        out_partitions - where to store the read partitions
-
-    Return:
-        0 - success
-        -1 - failed to read sector 0
-        -2 - invalid MBR signature
-*/
 int mbr_read_partitions(MBRPartition *out_partitions);

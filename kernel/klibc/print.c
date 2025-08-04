@@ -8,6 +8,8 @@
 */
 static void kvprintf(const char *restrict format, va_list args)
 {
+    if (!format) return;
+
     char buffer[32];
     char c;
     while ((c = *format++))
@@ -87,11 +89,15 @@ void kputchar(int c)
 
 void kputs(const char *s)
 {
+    if (!s) return;
+
     vga_puts((char *) s, VGA_COLOR(VGA_WHITE, VGA_BLACK));
 }
 
 void kprintf(const char *restrict format, ...)
 {
+    if (!format) return;
+
     va_list args;
     va_start(args, format);
     kvprintf(format, args);
@@ -100,6 +106,8 @@ void kprintf(const char *restrict format, ...)
 
 void kprint_log(LogTypes log, const char *restrict format, ...)
 {
+    if (!format) return;
+
     va_list args;
     va_start(args, format);
 

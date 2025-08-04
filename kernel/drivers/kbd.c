@@ -46,7 +46,8 @@ char kbd_scancode_to_char(uint8_t scancode)
     bool released = scancode & 0x80;
     uint8_t make_code = scancode & 0x7F;
 
-    if (released) {
+    if (released)
+    {
         switch (make_code)
         {
             case K_LEFT_SHIFT: case K_RIGHT_SHIFT: shift_pressed = false; break;

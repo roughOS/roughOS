@@ -1,4 +1,3 @@
-# Variables
 CC = gcc
 CFLAGS = -m32 -ffreestanding -O2 -Wall -Wextra -Ikernel -g -mgeneral-regs-only
 LD = ld
@@ -18,9 +17,9 @@ ASM_OBJECTS := $(patsubst $(KERNEL_DIR)/%.asm,$(BUILD_DIR)/%.o,$(ASM_SOURCES))
 
 OBJECTS := $(C_OBJECTS) $(ASM_OBJECTS)
 
-all: $(BUILD_DIR)/witheros.elf
+all: $(BUILD_DIR)/roughos.elf
 
-$(BUILD_DIR)/witheros.elf: $(OBJECTS)
+$(BUILD_DIR)/roughos.elf: $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c

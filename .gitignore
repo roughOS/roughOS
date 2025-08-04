@@ -1,0 +1,8 @@
+.cache/
+.vscode/
+build/
+iso/
+witheros.iso
+ide_disk.img
+mbr.bin
+compile_commands.json

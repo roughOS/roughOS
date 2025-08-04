@@ -7,26 +7,33 @@
 
 void parse_mmap(void *mb2_addr, Frame *frames, size_t frame_count)
 {
+    if (!mb2_addr) return;
+
     uint8_t *ptr = (uint8_t *) mb2_addr;
+    if (!ptr) return;
     ptr += 8;
 
     while (1)
     {
         struct multiboot_tag *tag = (struct multiboot_tag *) ptr;
+        if (!tag) return;
         if (tag->type == 0)
             break;
 
         if (tag->type == MULTIBOOT2_TAG_TYPE_MMAP)
         {
             struct multiboot_tag_mmap *mmap_tag = (struct multiboot_tag_mmap *) tag;
+            if (!mmap_tag) return;
             uint32_t entry_size = mmap_tag->entry_size;
             uint32_t entry_count = (mmap_tag->size - sizeof(struct multiboot_tag_mmap)) / entry_size;
 
             uint8_t *entry_ptr = (uint8_t *) mmap_tag->entries;
+            if (!entry_ptr) return;
 
             for (uint32_t i = 0; i < entry_count; i++)
             {
                 struct multiboot_mmap_entry *entry = (struct multiboot_mmap_entry *) entry_ptr;
+                if (!entry) return;
 
                 if (entry->type == 1)
                 {

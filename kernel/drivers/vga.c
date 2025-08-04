@@ -48,6 +48,7 @@ static void display_full_newline()
 void vga_putchar(uint8_t c, VGA_Colors color)
 {
     volatile char *vga = (volatile char *) VGA_START;
+    if (!vga) return;
 
     switch (c)
     {
@@ -94,6 +95,8 @@ void vga_putchar(uint8_t c, VGA_Colors color)
 
 void vga_puts(char *s, VGA_Colors color)
 {
+    if (!s) return;
+
     while (*s != C_NULL)
     {
         vga_putchar(*s, color);
@@ -107,6 +110,7 @@ void vga_vscroll(VGA_ScrollModes mode, uint32_t n, VGA_Colors color)
         return;
 
     volatile uint16_t *vga = (volatile uint16_t *) VGA_START;
+    if (!vga) return;
 
     switch((uint8_t)mode)
     {
@@ -140,6 +144,8 @@ void vga_vscroll(VGA_ScrollModes mode, uint32_t n, VGA_Colors color)
 void vga_clear(VGA_Colors color)
 {
     volatile uint16_t *vga = (volatile uint16_t *) VGA_START;
+    if (!vga) return;
+
     uint8_t fg = VGA_BLACK;
     uint8_t bg = color;
     uint8_t attribute = (bg << 4) | fg;
