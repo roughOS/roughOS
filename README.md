@@ -24,12 +24,12 @@ The OS is at an early development stage. Using it as your main OS would be a ver
 ## Building
 1. Clone the repository
 ```bash
-git clone https://github.com/TRWither/witheros
+git clone https://github.com/roughOS/roughOS
 ```
 
 2. Run the build script
 ```bash
-cd witheros
+cd roughOS
 chmod +x build.sh
 ./build.sh
 ```
