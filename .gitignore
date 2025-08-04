@@ -2,7 +2,7 @@
 .vscode/
 build/
 iso/
-witheros.iso
+roughos.iso
 ide_disk.img
 mbr.bin
 compile_commands.json
