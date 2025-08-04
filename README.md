@@ -4,21 +4,22 @@
 ## Why should I use RoughOS?
 Let's be honest: you shouldn't.
 
-The OS is at a very early development stage. Using it as your main OS would be a very bad and stupid idea. But you can read the source code, contribute to help its improvement, or even use it as a base for your operating system.
+The OS is at an early development stage. Using it as your main OS would be a very bad and stupid idea. But you can read the source code, contribute to help its improvement, or even use it as a base for your operating system.
 
 ## Features
-- Booting with GRUB2
-- GDT
-- IDT
-- VGA driver
-- PIC driver
-- PS/2 driver
-- Basic keyboard driver
-- Basic ATA driver
-- Basic kernel libc
-- PMM (Physical Memory Manager)
-- Heap
+- VFS
 - MBR support
+- Heap
+- Physical memory management
+- Kernel libc
+- ATA driver
+- Keyboard driver
+- PS/2 driver
+- PIC driver
+- VGA driver
+- Interrupts support
+- GDT
+- Booting with GRUB2
 
 ## Building
 1. Clone the repository
@@ -40,9 +41,11 @@ qemu-system-i386 -cdrom roughos.iso -drive format=raw,file=ide_disk.img -boot d
 ```
 
 ## Run a program
-RoughOS doesn't have a filesystem yet, but you can make programs for it without editing the source code.
+RoughOS cannot run binaries yet, but you can make programs for it without editing the source code.
 
 Open [`template.c`](kernel/template.c). You will see a basic function displaying "Hello world!" using the klibc `kprintf()` function. This function is automatically executed by the kernel when you run the operating system. Just recompile it when you edit the function code.
+
+You can also interact with the VFS (Virtual FileSystem) using [the VFS header](kernel/fs/include/vfs.h).
 
 ## Contributing
 Everyone is free to contribute to WitherOS! Read detailed contribution rules [here](CONTRIBUTING.md).

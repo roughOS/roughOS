@@ -10,6 +10,7 @@
 #include "drivers/include/ps2.h"
 #include "drivers/include/ide.h"
 #include "fs/include/mbr.h"
+#include "fs/include/vfs.h"
 
 static Frame frames[MAX_FRAMES];
 static uint16_t ide_buffer[256];
@@ -72,4 +73,10 @@ void disk_check()
         kprint_log(LOG_ERR, "MBR error code: %d", ret);
     else
         kprint_log(LOG_INFO, "MBR primary partitions found");
+}
+
+void fs_install()
+{
+    vfs_init();
+    kprint_log(LOG_INFO, "VFS initialized");
 }

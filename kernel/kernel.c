@@ -11,6 +11,7 @@ void kmain(void *mb2_addr)
     interrupts_install();
     drivers_install();
     disk_check();
+    fs_install();
 
     asm volatile ("sti");
 

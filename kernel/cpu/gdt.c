@@ -25,10 +25,6 @@ void gdt_init()
     gdt_set_entry(1, 0, 0xfffff, 0x9a, 0xc0);       // kernel code
     gdt_set_entry(2, 0, 0xfffff, 0x92, 0xc0);       // kernel data
     gdt_set_entry(3, 0, 0xfffff, 0x92, 0xcf);       // kernel stack
-    gdt_set_entry(4, 0, 0xfffff, 0xfa, 0xcf);       // user code
-    gdt_set_entry(5, 0, 0xfffff, 0xf2, 0xcf);       // user data
-    gdt_set_entry(6, 0, 0xfffff, 0xf2, 0xcf);       // user stack
-
     asm volatile (
         "lgdt (%0)\n\t"
         "mov $0x10, %%ax\n\t"

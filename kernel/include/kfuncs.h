@@ -5,3 +5,4 @@ void gdt_install();
 void interrupts_install();
 void drivers_install();
 void disk_check();
+void fs_install();
