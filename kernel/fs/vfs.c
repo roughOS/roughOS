@@ -5,11 +5,26 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <time.h>
 
-static VFSNode *vfs_root = NULL;
+VFSNode *vfs_root = NULL;
 
-VFSNode *vfs_create_node(const char *name, int type, VFSNode *parent)
+int vfs_init()
+{
+    vfs_root = vfs_create_node("/", VFS_DIR, NULL);
+    if (!vfs_root)
+        return -1;
+
+    vfs_create("/bin", VFS_DIR);
+    vfs_create("/usr", VFS_DIR);
+    vfs_create("/usr/bin", VFS_DIR);
+    vfs_create("/rott", VFS_DIR);
+
+    vfs_create("/README.txt", VFS_FILE);
+
+    return 0;
+}
+
+VFSNode *vfs_create_node(const char *name, VFSType type, VFSNode *parent)
 {
     if (!name)
         return NULL;
@@ -39,6 +54,51 @@ VFSNode *vfs_create_node(const char *name, int type, VFSNode *parent)
     return node;
 }
 
+void vfs_remove_node(VFSNode *node)
+{
+    if (!node)
+        return;
+
+    if (node->driver && node->driver->unmount)
+        node->driver->unmount(node);
+
+    if (node->type == VFS_DIR)
+    {
+        for (size_t i = 0; i < node->child_count; i++)
+            vfs_remove_node(node->children[i]);
+
+        if (node->children)
+            kfree(node->children);
+    }
+
+    if (node->fs_data)
+        kfree(node->fs_data);
+
+    kfree(node->name);
+    kfree(node);
+}
+
+void vfs_cleanup_node(VFSNode *node)
+{
+    if (!node)
+        return;
+
+    if (node->type == VFS_DIR)
+    {
+        for (size_t i = 0; i < node->child_count; i++)
+            vfs_cleanup_node(node->children[i]);
+
+        if (node->children)
+            kfree(node->children);
+    }
+
+    if (node->fs_data)
+        kfree(node->fs_data);
+
+    kfree(node->name);
+    kfree(node);
+}
+
 int vfs_add_child(VFSNode *parent, VFSNode *child)
 {
     if (!parent || !child)
@@ -56,17 +116,15 @@ int vfs_add_child(VFSNode *parent, VFSNode *child)
     }
     else if (parent->child_count >= parent->child_capacity)
     {
-        size_t new_child_capacity = parent->child_capacity * 2;
-        VFSNode **new_children = kmalloc(sizeof(VFSNode *) * new_child_capacity);
+        size_t new_capacity = parent->child_capacity * 2;
+        VFSNode **new_children = kmalloc(sizeof(VFSNode *) * new_capacity);
         if (!new_children)
             return -4;
 
         kmemmove(new_children, parent->children, sizeof(VFSNode *) * parent->child_count);
-
         kfree(parent->children);
-
         parent->children = new_children;
-        parent->child_capacity = new_child_capacity;
+        parent->child_capacity = new_capacity;
     }
 
     parent->children[parent->child_count++] = child;
@@ -75,277 +133,203 @@ int vfs_add_child(VFSNode *parent, VFSNode *child)
     return 0;
 }
 
-void vfs_init()
+int vfs_mount(const char *path, FSDriver *driver, void *spec_data)
 {
-    vfs_root = vfs_create_node("/", VFS_DIR, NULL);
-
-    vfs_mkdir("/bin");
-    vfs_mkdir("/root");
-    vfs_mkdir("/usr");
-    vfs_mkdir("/usr/bin");
-
-    vfs_newfile("README.txt");
-    VFSNode *readme = vfs_lookup("/README.txt");
-    vfs_write(readme, "Welcome on RoughOS!", 20, 0);
-}
-
-VFSNode *vfs_lookup(const char *name)
-{
-    if (!name || name[0] != '/' || !vfs_root)
-        return NULL;
-
-    if (kstrcmp(name, "/") == 0)
-        return vfs_root;
-    
-    VFSNode *current = vfs_root;
-
-    char *name_copy = kmalloc(kstrlen(name) + 1);
-    if (!name_copy)
-        return NULL;
-
-    kstrncpy(name_copy, name, kstrlen(name) + 1);
-
-    char *token = kstrtok(name_copy + 1, "/");
-    if (!token) {
-        kfree(name_copy);
-        return NULL;
-    }
-
-    while (token && current)
-    {
-        if (current->type != VFS_DIR) {
-            kfree(name_copy);
-            return NULL;
-        }
-
-        VFSNode *next = NULL;
-        for (size_t i = 0; i < current->child_count; i++) {
-            if (kstrcmp(current->children[i]->name, token) == 0) {
-                next = current->children[i];
-                break;
-            }
-        }
-
-        if (!next) {
-            kfree(name_copy);
-            return NULL;
-        }
-
-        current = next;
-        token = kstrtok(NULL, "/");
-    }
-
-    kfree(name_copy);
-    return current;
-}
-
-void vfs_mkdir(const char *name)
-{
-    if (!name || name[0] != '/')
-        return;
-
-    char *name_copy = kmalloc(kstrlen(name) + 1);
-    if (!name_copy)
-        return;
-
-    kstrncpy(name_copy, name, kstrlen(name) + 1);
-
-    VFSNode *current = vfs_root;
-    char *token = kstrtok(name_copy + 1, "/");
-
-    while (token)
-    {
-        VFSNode *next = NULL;
-
-        for (size_t i = 0; i < current->child_count; ++i)
-            if (kstrcmp(current->children[i]->name, token) == 0)
-            {
-                next = current->children[i];
-                break;
-            }
-
-        if (!next)
-        {
-            next = vfs_create_node(token, VFS_DIR, NULL);
-            if (vfs_add_child(current, next) != 0)
-            {
-                kfree(name_copy);
-                return;
-            }
-        }
-
-        current = next;
-        token = kstrtok(NULL, "/");
-    }
-
-    kfree(name_copy);
-}
-
-char **vfs_listdir(const char *name, size_t *output_size)
-{
-    if (output_size)
-        *output_size = 0;
-
-    VFSNode *node = vfs_lookup(name);
-    if (!node || node->type != VFS_DIR)
-        return NULL;
-    if (node->child_count == 0)
-        return NULL;
-
-    char **result = kmalloc(sizeof(char *) * node->child_count);
-    if (!result)
-        return NULL;
-
-    for (size_t i = 0; i < node->child_count; i++)
-    {
-        size_t length = kstrlen(node->children[i]->name) + 1;
-        result[i] = kmalloc(length);
-
-        if (!result[i])
-        {
-            for (size_t j = 0; j < i; j++)
-                kfree(result[j]);
-
-            kfree(result);
-            
-            return NULL;
-        }
-
-        kstrncpy(result[i], node->children[i]->name, length);
-    }
-
-    if (output_size)
-        *output_size = node->child_count;
-
-    return result;
-}
-
-VFSNode *vfs_newfile(const char *name)
-{
-    if (!name || name[0] != '/')
-        return NULL;
-
-    char *name_copy = kmalloc(kstrlen(name) + 1);
-    if (!name_copy)
-        return NULL;
-
-    kstrncpy(name_copy, name, kstrlen(name) + 1);
-
-    VFSNode *current = vfs_root;
-    char *token = kstrtok(name_copy + 1, "/");
-    VFSNode *last_created = NULL;
-
-    while (token)
-    {
-        VFSNode *next = NULL;
-
-        for (size_t i = 0; i < current->child_count; i++)
-            if (kstrcmp(current->children[i]->name, token) == 0)
-            {
-                next = current->children[i];
-                break;
-            }
-
-        if (!next)
-        {
-            char *next_tok = kstrtok(NULL, "/");
-            kstrtok(NULL, "");
-            kstrtok(name_copy + 1, "/");
-
-            if (next_tok)
-                next = vfs_create_node(token, VFS_DIR, NULL);
-            else
-                next = vfs_create_node(token, VFS_FILE, NULL);
-
-            if (!next || vfs_add_child(current, next) != 0)
-            {
-                kfree(name_copy);
-                return NULL;
-            }
-
-            last_created = next;
-        }
-        else
-            if (token && token[0] && next->type != VFS_DIR && kstrtok(NULL, "/") != NULL)
-            {
-                kfree(name_copy);
-                return NULL;
-            }
-
-        current = next;
-        token = kstrtok(NULL, "/");
-    }
-
-    kfree(name_copy);
-
-    return current;
-}
-
-ssize_t vfs_read(VFSNode *file, void *buffer, size_t size, size_t offset)
-{
-    if (!file || file->type != VFS_FILE || !buffer)
+    if (!path || !driver)
         return -1;
 
-    FileData *data = (FileData *)file->fs_data;
-    if (!data || offset >= data->size)
+    VFSNode *mount_point = vfs_lookup(path);
+    if (!mount_point)
         return -2;
 
-    size_t bytes = size;
+    if (mount_point->type != VFS_DIR)
+        return -3;
 
-    if (offset + size > data->size)
-        bytes = data->size - offset;
+    VFSNode *fs_root = driver->mount(spec_data);
+    if (!fs_root)
+        return -4;
 
-    kmemmove(buffer, data->data + offset, bytes);
+    mount_point->driver = driver;
+    mount_point->fs_data = fs_root->fs_data;
 
-    return bytes;
+    if (mount_point->children)
+        kfree(mount_point->children);
+
+    mount_point->children = fs_root->children;
+    mount_point->child_count = fs_root->child_count;
+    mount_point->child_capacity = fs_root->child_capacity;
+
+    kfree(fs_root->name);
+    kfree(fs_root);
+
+    return 0;
 }
 
-ssize_t vfs_write(VFSNode *file, const void *buffer, size_t size, size_t offset)
+VFSNode *vfs_lookup(const char *path)
 {
-    if (!file || file->type != VFS_FILE || !buffer)
+    if (!path || path[0] != '/' || !vfs_root)
+        return NULL;
+
+    if (kstrcmp(path, "/") == 0)
+        return vfs_root;
+
+    VFSNode *current = vfs_root;
+
+    char *path_copy = kmalloc(kstrlen(path) + 1);
+    if (!path_copy)
+        return NULL;
+
+    kstrncpy(path_copy, path, kstrlen(path) + 1);
+
+    char *token = kstrtok(path_copy + 1, "/");
+    while (token && current)
+    {
+        if (current->driver && current->driver->lookup)
+            current = current->driver->lookup(current, token);
+        else
+        {
+            VFSNode *next = NULL;
+            if (current->type != VFS_DIR)
+            {
+                current = NULL;
+                break;
+            }
+            for (size_t i = 0; i < current->child_count; i++)
+                if (kstrcmp(current->children[i]->name, token) == 0)
+                {
+                    next = current->children[i];
+                    break;
+                }
+            current = next;
+        }
+        token = kstrtok(NULL, "/");
+    }
+
+    kfree(path_copy);
+
+    return current;
+}
+
+int vfs_create(const char *path, VFSType type)
+{
+    if (!path || path[0] != '/')
         return -1;
 
-    FileData *data = (FileData *)file->fs_data;
-    if (!data)
+    char *path_copy = kmalloc(kstrlen(path) + 1);
+    if (!path_copy)
+        return -2;
+
+    kstrncpy(path_copy, path, kstrlen(path) + 1);
+
+    VFSNode *current = vfs_root;
+    char *token = kstrtok(path_copy + 1, "/");
+    char *next_token = NULL;
+
+    while (token)
     {
-        data = kmalloc(sizeof(FileData));
-        if (!data)
-            return -2;
+        next_token = kstrtok(NULL, "/");
+        VFSNode *child = NULL;
 
-        data->data = NULL;
-        data->size = 0;
-        data->capacity = 0;
-
-        file->fs_data = data;
-    }
-
-    size_t needed_size = offset + size;
-
-    if (data->capacity < needed_size)
-    {
-        size_t new_capacity = data->capacity ? data->capacity * 2 : 128;
-
-        while (new_capacity < needed_size)
-            new_capacity *= 2;
-
-        uint8_t *new_data = kmalloc(new_capacity);
-        if (!new_data)
-            return -3;
-
-        if (data->data)
+        if (current->driver && current->driver->lookup)
+            child = current->driver->lookup(current, token);
+        else
         {
-            kmemmove(new_data, data->data, data->size);
-            kfree(data->data);
+            for (size_t i = 0; i < current->child_count; i++)
+                if (kstrcmp(current->children[i]->name, token) == 0)
+                {
+                    child = current->children[i];
+                    break;
+                }
         }
 
-        data->data = new_data;
-        data->capacity = new_capacity;
+        if (!child)
+        {
+            if (current->driver && current->driver->create)
+                child = current->driver->create(current, token, next_token ? VFS_DIR : type);
+            else
+            {
+                child = vfs_create_node(token, next_token ? VFS_DIR : type, current);
+                if (!child)
+                {
+                    kfree(path_copy);
+                    return -3;
+                }
+                if (vfs_add_child(current, child) != 0)
+                {
+                    kfree(path_copy);
+                    return -4;
+                }
+            }
+        }
+        current = child;
+        token = next_token;
     }
 
-    kmemmove(data->data + offset, buffer, size);
+    kfree(path_copy);
 
-    if (offset + size > data->size)
-        data->size = offset + size;
+    return 0;
+}
 
-    return size;
+int vfs_remove(const char *path)
+{
+    VFSNode *node = vfs_lookup(path);
+    if (!node)
+        return -1;
+
+    if (node == vfs_root)
+        return -2;
+
+    VFSNode *parent = node->parent;
+    if (!parent)
+        return -3;
+
+    size_t idx = 0;
+    for (; idx < node->child_count; idx++)
+        if (parent->children[idx] == node)
+            break;
+
+    if (idx == parent->child_count)
+        return -4;
+
+    for (size_t i = idx; i < parent->child_count - 1; i++)
+        parent->children[i] = parent->children[i + 1];
+
+    parent->child_count--;
+
+    vfs_remove_node(node);
+
+    return 0;
+}
+
+int vfs_cleanup()
+{
+    if (!vfs_root)
+        return -1;
+
+    vfs_cleanup_node(vfs_root);
+    vfs_root = NULL;
+
+    return 0;
+}
+
+ssize_t vfs_read(VFSNode *node, void *buffer, size_t size, size_t offset)
+{
+    if (!node || node->type != VFS_FILE || !buffer)
+        return -1;
+
+    if (node->driver && node->driver->read)
+        return node->driver->read(node, buffer, size, offset);
+
+    return -2;
+}
+
+ssize_t vfs_write(VFSNode *node, const void *buffer, size_t size, size_t offset)
+{
+    if (!node || node->type != VFS_FILE || !buffer)
+        return -1;
+
+    if (node->driver && node->driver->write)
+        return node->driver->write(node, buffer, size, offset);
+
+    return -2;
 }

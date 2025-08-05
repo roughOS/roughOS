@@ -8,6 +8,7 @@ The OS is at an early development stage. Using it as your main OS would be a ver
 
 ## Features
 - VFS
+- tmpfs
 - MBR support
 - Heap
 - Physical memory management

@@ -10,7 +10,7 @@
 #include "drivers/include/ps2.h"
 #include "drivers/include/ide.h"
 #include "fs/include/mbr.h"
-#include "fs/include/vfs.h"
+#include "fs/tmpfs/tmpfs.h"
 
 static Frame frames[MAX_FRAMES];
 static uint16_t ide_buffer[256];
@@ -78,5 +78,8 @@ void disk_check()
 void fs_install()
 {
     vfs_init();
-    kprint_log(LOG_INFO, "VFS initialized");
+    kprint_log(LOG_INFO, "Initialized VFS");
+
+    vfs_mount("/", &tmpfs_driver, NULL);
+    kprint_log(LOG_INFO, "Mounted filesystem: tmpfs");
 }

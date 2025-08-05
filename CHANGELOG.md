@@ -12,7 +12,8 @@
 - Code cleanup
 
 **Version 0.0.3**:
-- Added VFS:
+- Added basic VFS
+- Added tmpfs:
     - Create directories and files
     - List directories and files
     - Read files
@@ -23,3 +24,9 @@
     - kstrncpy()
     - kstrchr()
     - kstrtok()
+
+**Version 0.0.4**:
+- Improved VFS:
+    - tmpfs backend
+    - FS drivers management
+    - Can remove files and directories
